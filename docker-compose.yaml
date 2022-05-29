@@ -1,0 +1,8 @@
+services:
+  marthos-database:
+    image: mariadb
+    container_name: marthos-database
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - 3306:3306
