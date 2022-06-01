@@ -1,3 +1,5 @@
+import json
+
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
@@ -29,21 +31,36 @@ client_model = namespace.model("Client", {
     )
 })
 
-client_example = {"id": 1,
-                  "name": "Raynal",
-                  "surname": "Julien",
-                  "address": "30 rue des etudes",
-                  "phone": "0666666666"}
+client_company_model = namespace.model("Client in a company", {
+    "company_id": fields.Integer(
+        readonly=True,
+        description="Company id"
+    ),
+    "company_name": fields.String(
+        readonly=True,
+        description="Company id"
+    ),
+    "client_id": fields.Integer(
+        readonly=True,
+        description="Client id"
+    ),
+    "client_name": fields.String(
+        readonly=True,
+        description="Client name"
+    )
+})
 
+client_info = namespace.model("Info to find a client", {
+    "id_client": fields.Integer(
+        required=True,
+        description="The client id"
+    ),
+    "id_company": fields.Integer(
+        required=True,
+        description="The company id"
+    )
+})
 
-# create_user_data = namespace.model(
-#     "Insert user in database",
-#     {"name": fields.String(description="client name", required=True),
-#      "surname": fields.String(description="client surname", required=True),
-#      "address": fields.String(description="client address", required=True),
-#      "phone": fields.String(description="client phone number", required=True)
-#      }
-# )
 
 def convert_db_json(client: tuple) -> dict:
     return {
@@ -69,7 +86,7 @@ class ClientGeneral(Resource):
         return json_clients
 
     @namespace.expect(client_model)
-    def post(self):
+    def put(self):
         """Create user"""
         json_data = request.json
         execute_database("INSERT INTO Client (Nom, Prenom, Adresse, Telephone)"
@@ -94,3 +111,32 @@ class Client(Resource):
     def delete(self, id):
         """Delete user with specific id"""
         execute_database("DELETE FROM Client where Id={}".format(id))
+
+
+@namespace.route("/company/<int:clid>&<int:coid>")
+@namespace.param("clid", "the client id")
+@namespace.param("coid", "the company id")
+class ClientCompany(Resource):
+    @namespace.marshal_with(client_company_model)
+    @namespace.response(500, "BDD error")
+    def get(self, clid, coid) -> dict:
+        """Check if user exists in specific company"""
+        client: list = request_database("SELECt C.Id, C.Nom, C2.Id, C2.Nom \
+                                            FROM CC \
+                                            JOIN Companie C on CC.IdCompanie = C.Id \
+                                            JOIN Client C2 on CC.IdClient = C2.Id \
+                                            WHERE IdCompanie={} AND C2.Id={};".format(
+            coid,
+            clid
+        ))
+        client_data: dict = {}
+        try:
+            client_data = {
+            "company_id": client[0][0],
+            "company_name": client[0][1],
+            "client_id": client[0][2],
+            "client_name": client[0][3]
+        }
+        except Exception as e:
+            print("no such data available")
+        return client_data

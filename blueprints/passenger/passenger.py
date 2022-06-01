@@ -45,7 +45,7 @@ class PassengerGeneral(Resource):
         return json_passengers
 
     @namespace.expect(passenger_model)
-    def post(self):
+    def put(self):
         """Create a passenger"""
         json_data: json = request.json
         execute_database("INSERT INTO Passager (Nom, Prenom)"
@@ -68,3 +68,13 @@ class Passenger(Resource):
     def delete(self, id):
         """Delete user with specific id"""
         execute_database("DELETE FROM Passager where Id={}".format(id))
+
+    @namespace.expect(passenger_model)
+    def post(self, id):
+        """modify a passenger"""
+        datas_dict: dict = {}
+        for key in request.json:
+            if key == "name" and request.json.get(key) != "string" and request.json.get(key) is not None:
+                execute_database("UPDATE Passager SET Nom = '{}' WHERE Id={}".format(request.json.get(key), id))
+            if key == "surname" and request.json.get(key) != "string" and request.json.get(key) is not None:
+                execute_database("UPDATE Passager SET Prenom = '{}' WHERE Id={}".format(request.json.get(key), id))

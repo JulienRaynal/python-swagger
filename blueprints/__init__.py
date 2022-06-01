@@ -9,6 +9,7 @@ from blueprints.ville.ville import namespace as city_ns
 from blueprints.gare.gare import namespace as station_ns
 from blueprints.companie.companie import namespace as company_ns
 from blueprints.reservation.reservation import namespace as reservation_ns
+from blueprints.ux.ux import namespace as ux_ns
 
 blueprint: Blueprint = Blueprint("documented API", __name__, url_prefix="/")
 
@@ -28,3 +29,4 @@ api_extension.add_namespace(arret_ns)
 api_extension.add_namespace(passenger_ns)
 api_extension.add_namespace(user_ns)
 api_extension.add_namespace(reservation_ns)
+api_extension.add_namespace(ux_ns)
